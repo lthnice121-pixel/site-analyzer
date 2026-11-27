@@ -16,7 +16,7 @@ with st.sidebar:
     bld_key = st.text_input(
         "1. 건축HUB(공공데이터포털) 인증키", 
         type="password",
-        help="공공데이터포털(data.go.kr)에서 발급받은 일반 인증키(Encoding 또는 Decoding)"
+        help="공공데이터포털(data.go.kr)에서 발급받은 일반 인증키"
     )
     land_key = st.text_input(
         "2. 토지이음 / VWorld 인증키", 
@@ -41,60 +41,4 @@ bun_str = f"{int(bun):04d}"
 ji_str = f"{int(ji):04d}"
 pnu = f"{sigungu}{bjdong}1{bun_str}{ji_str}"
 
-tab1, tab2 = st.tabs(["🏢 건축물대장 표제부 (건축HUB)", "🗺️ 토지이용계획 (토지이음/VWorld)"])
-
-# 탭 1: 건축물대장 표제부 조회
-with tab1:
-    if st.button("🏢 건축물대장 조회 실행"):
-        if not bld_key:
-            st.warning("⚠️ 왼쪽 사이드바에 '건축HUB 인증키'를 입력해 주세요.")
-        else:
-            with st.spinner("건축HUB 서버와 통신 중..."):
-                # 기본 요청 파라미터 (일반대지 platGbCd="0")
-                params = {
-                    "serviceKey": bld_key,
-                    "sigunguCd": sigungu,
-                    "bjdongCd": bjdong,
-                    "platGbCd": "0",
-                    "bun": bun_str,
-                    "ji": ji_str,
-                    "numOfRows": "20",
-                    "pageNo": "1",
-                    "_type": "json"
-                }
-                
-                try:
-                    res = requests.get(BLD_URL, params=params, timeout=10)
-                    res_json = res.json()
-                    total_cnt = res_json.get("response", {}).get("body", {}).get("totalCount", 0)
-                    
-                    # platGbCd="0" 지정 시 0건인 경우, 파라미터를 제거하고 재조회
-                    if int(total_cnt) == 0:
-                        params.pop("platGbCd", None)
-                        retry_res = requests.get(BLD_URL, params=params, timeout=10)
-                        res_json = retry_res.json()
-                    
-                    st.success("건축물대장 조회가 완료되었습니다.")
-                    st.json(res_json)
-                except Exception as e:
-                    st.error(f"통신 중 오류가 발생했습니다: {e}")
-                    if 'res' in locals():
-                        st.text_area("서버 응답 원본", res.text, height=250)
-
-# 탭 2: 토지이용계획 속성 조회
-with tab2:
-    if st.button("🗺️ 토지이용계획 조회 실행"):
-        if not land_key:
-            st.warning("⚠️ 왼쪽 사이드바에 '토지이음 / VWorld 인증키'를 입력해 주세요.")
-        else:
-            with st.spinner("토지이용계획 서버와 통신 중..."):
-                params = {
-                    "key": land_key,
-                    "pnu": pnu,
-                    "numOfRows": "50",
-                    "pageNo": "1",
-                    "format": "json"
-                }
-                try:
-                    res = requests.get(LAND_URL, params=params, timeout=10)
-                    st.success("토지이용계획 조회가 완료되었습니다.")
+tab1, tab2 = st.tabs(["🏢 건축물대장 표제부 (건축HUB)",
